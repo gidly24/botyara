@@ -5,107 +5,91 @@ tg.MainButton.hide();
 const routesGrid = document.getElementById('routes-grid');
 const placesGrid = document.getElementById('places-grid');
 
+// Твои статические данные — просто вставь сюда сколько угодно маршрутов и мест
+const ROUTES = [
+    { id: 1, name: "Набережная Волги", description: "Классика Самары за 2 часа", duration: "2–3 часа", places_count: 8 },
+    { id: 2, name: "Космическая Самара", description: "Ракеты, музеи, история полётов", duration: "4 часа", places_count: 6 },
+    { id: 3, name: "Старый город", description: "Доходные дома, особняки, атмосфера", duration: "3 часа", places_count: 10 },
+];
+
+const ATTRACTIONS = [
+    { id: 1, name: "Бункер Сталина", description: "Секретный объект на глубине 37 метров", address: "ул. Фрунзе, 163", price: "600 ₽" },
+    { id: 2, name: "Музей Ракета «Союз»", description: "Настоящая ракета во дворе!", address: "пр. Ленина, 21", price: "300 ₽" },
+    { id: 3, name: "Самарская набережная", description: "Лучшее место для прогулок и фоток", address: "Набережная реки Волги", price: "Бесплатно" },
+    { id: 4, name: "Площадь Куйбышева", description: "Самая большая площадь в Европе", address: "пл. Куйбышева", price: "Бесплатно" },
+    // добавляй сколько влезет
+];
+
+// Заглушки (те же красивые)
 function placeholderImage(id, type = 'route') {
-    const palettes = {
-        route: ['#8B5CF6', '#A78BFA', '#C4B5FD'],
-        place: ['#3B82F6', '#60A5FA', '#93BBFC']
-    };
-    const [bg, mid, light] = palettes[type];
-    const title = type === 'route' ? 'Маршрут' : 'Место';
-
-    return `data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='600' viewBox='0 0 800 600'><defs><linearGradient id='g' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='${mid}'/><stop offset='100%' stop-color='${bg}'/></linearGradient></defs><rect width='800' height='600' fill='url(%23g)'/><path d='M100 100 Q400 20 700 100 T700 500 Q400 580 100 500 Z' fill='rgba(255,255,255,0.1)'/><text x='400' y='290' font-family='Arial,sans-serif' font-size='64' fill='white' text-anchor='middle'>${title}</text><text x='400' y='380' font-family='Arial,sans-serif' font-size='48' fill='${light}' text-anchor='middle'>#${id}</text></svg>`;
+    const colors = type === 'route' ? '#8B5CF6' : '#3B82F6';
+    return `data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='600' viewBox='0 0 800 600'><rect width='800' height='600' fill='${colors}'/><text x='400' y='320' font-family='Arial' font-size='72' fill='white' text-anchor='middle'>${type === 'route' ? 'Маршрут' : 'Место'} #${id}</text></svg>`;
 }
 
-// === РОУТЫ ===
-async function showRoutes() {
-    routesGrid.innerHTML = '<div class="loader">Загрузка маршрутов...</div>';
-    placesGrid.innerHTML = '';
-
-    try {
-        const res = await fetch('/api/routes');
-        const routes = await res.json();
-
-        routesGrid.innerHTML = routes.length ? routes.map(r => `
-            <div class="card" onclick="selectRoute(${r.id})">
-                <img src="${placeholderImage(r.id, 'route')}" alt="${r.name}">
-                <div class="card-content">
-                    <div class="card-title">${r.name}</div>
-                    <div class="card-desc">${r.description}</div>
-                    <div class="card-meta">
-                        <span>${r.duration || '—'}</span>
-                        <span class="badge">${r.places_count} мест</span>
-                    </div>
+// Показываем маршруты
+function showRoutes() {
+    routesGrid.innerHTML = ROUTES.map(r => `
+        <div class="card" onclick="openRoute(${r.id})">
+            <img src="${placeholderImage(r.id, 'route')}" alt="${r.name}">
+            <div class="card-content">
+                <div class="card-title">${r.name}</div>
+                <div class="card-desc">${r.description}</div>
+                <div class="card-meta">
+                    <span>${r.duration}</span>
+                    <span class="badge">${r.places_count} мест</span>
                 </div>
             </div>
-        `).join('') : '<div class="empty">Маршруты пока не добавлены</div>';
-    } catch (e) {
-        routesGrid.innerHTML = '<div class="error">Ошибка загрузки маршрутов</div>';
-    }
+        </div>
+    `).join('');
 }
 
-// === МЕСТА ===
-async function showAttractions() {
-    placesGrid.innerHTML = '<div class="loader">Загрузка мест...</div>';
-    routesGrid.innerHTML = '';
-
-    try {
-        const res = await fetch('/api/attractions');
-        const attractions = await res.json();
-
-        placesGrid.innerHTML = attractions.length ? attractions.map(a => `
-            <div class="card" onclick="selectAttraction(${a.id})">
-                <img src="${placeholderImage(a.id, 'place')}" alt="${a.name}">
-                <div class="card-content">
-                    <div class="card-title">${a.name}</div>
-                    <div class="card-desc">${a.description.split('.')[0]}...</div>
-                    <div class="card-meta">
-                        <span>${a.address}</span>
-                        <span class="badge">${a.price || 'Бесплатно'}</span>
-                    </div>
+function showAttractions() {
+    placesGrid.innerHTML = ATTRACTIONS.map(a => `
+        <div class="card" onclick="openAttraction(${a.id})">
+            <img src="${placeholderImage(a.id, 'place')}" alt="${a.name}">
+            <div class="card-content">
+                <div class="card-title">${a.name}</div>
+                <div class="card-desc">${a.description}</div>
+                <div class="card-meta">
+                    <span>${a.address}</span>
+                    <span class="badge">${a.price}</span>
                 </div>
             </div>
-        `).join('') : '<div class="empty">Места не найдены</div>';
-    } catch (e) {
-        placesGrid.innerHTML = '<div class="error">Ошибка загрузки мест</div>';
-    }
+        </div>
+    `).join('');
 }
 
-// КЛИКИ ПО КАРТОЧКАМ — ВОТ ГЛАВНОЕ ИСПРАВЛЕНИЕ
-window.selectRoute = function(id) {
-    const card = event.currentTarget;
-    const name = card.querySelector('.card-title').textContent;
-    tg.MainButton.setText(`Пройти маршрут: ${name}`).show();
-    tg.MainButton.off('click'); // на всякий случай чистим старый обработчик
-    tg.MainButton.onClick(() => {
-        tg.sendData(JSON.stringify({ action: "open_route", route_id: id }));
-        tg.close();
-    });
+// Вот эта магия — отправляет данные ПРЯМО В ТВОЙ БОТ
+window.openRoute = function(routeId) {
+    const route = ROUTES.find(r => r.id === routeId);
+    tg.sendData(JSON.stringify({
+        action: "open_route",
+        route_id: routeId,
+        name: route.name
+    }));
+    tg.close();
 };
 
-window.selectAttraction = function(id) {
-    const card = event.currentTarget;
-    const name = card.querySelector('.card-title').textContent;
-    tg.MainButton.setText(`Открыть: ${name}`).show();
-    tg.MainButton.off('click');
-    tg.MainButton.onClick(() => {
-        tg.sendData(JSON.stringify({ action: "open_attraction", attraction_id: id }));
-        tg.close();
-    });
+window.openAttraction = function(attrId) {
+    const attr = ATTRACTIONS.find(a => a.id === attrId);
+    tg.sendData(JSON.stringify({
+        action: "open_attraction",
+        attraction_id: attrId,
+        name: attr.name
+    }));
+    tg.close();
 };
 
-// ТАБЫ
+// Табы
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-
         tab.classList.add('active');
         document.getElementById(tab.dataset.tab).classList.add('active');
-
         if (tab.dataset.tab === 'routes') showRoutes();
         else showAttractions();
     });
 });
 
-// Старт
 showRoutes();
