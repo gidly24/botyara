@@ -1,11 +1,10 @@
 let tg = window.Telegram.WebApp;
 tg.expand();
-tg.ready(); // ← обязательно для Menu Button
+tg.ready(); // ← критически важно для Menu Button
 
 const routesGrid = document.getElementById('routes-grid');
 const placesGrid = document.getElementById('places-grid');
 
-// Статические данные (потом можешь заменить на любые)
 const ROUTES = [
     { id: 1, name: "Набережная Волги", description: "Классика Самары за 2–3 часа", duration: "2–3 ч", places_count: 8 },
     { id: 2, name: "Космическая Самара", description: "Ракеты, музеи, история космоса", duration: "4 ч", places_count: 6 },
@@ -18,16 +17,22 @@ const ATTRACTIONS = [
     { id: 3, name: "Самарская набережная", description: "Лучшее место для прогулок", address: "Набережная Волги", price: "Бесплатно" },
 ];
 
-// Заглушки
-function placeholder(id, type) {
+function generatePlaceholder(id, type) {
     const color = type === 'route' ? '#8B5CF6' : '#3B82F6';
-    return `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect width="800" height="600" fill="${color}"/><text x="400" y="320" font-size="72" fill="white" text-anchor="middle" font-family="sans-serif">${type === 'route' ? 'Маршрут' : 'Место'} #${id}</text></svg>`;
+    const title = type === 'route' ? 'Маршрут' : 'Место';
+    return `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" class="card-svg">
+            <rect width="800" height="600" fill="${color}"/>
+            <text x="400" y="300" font-size="72" fill="white" text-anchor="middle" font-family="sans-serif">${title}</text>
+            <text x="400" y="380" font-size="56" fill="#ddd" text-anchor="middle" font-family="sans-serif">#${id}</text>
+        </svg>
+    `;
 }
 
 function renderRoutes() {
     routesGrid.innerHTML = ROUTES.map(r => `
         <div class="card" onclick="selectRoute(${r.id})">
-            <img src="${placeholder(r.id, 'route')}" alt="${r.name}">
+            <div class="card-image">${generatePlaceholder(r.id, 'route')}</div>
             <div class="card-content">
                 <div class="card-title">${r.name}</div>
                 <div class="card-desc">${r.description}</div>
@@ -44,7 +49,7 @@ function renderRoutes() {
 function renderAttractions() {
     placesGrid.innerHTML = ATTRACTIONS.map(a => `
         <div class="card" onclick="selectAttraction(${a.id})">
-            <img src="${placeholder(a.id, 'place')}" alt="${a.name}">
+            <div class="card-image">${generatePlaceholder(a.id, 'place')}</div>
             <div class="card-content">
                 <div class="card-title">${a.name}</div>
                 <div class="card-desc">${a.description}</div>
@@ -58,34 +63,28 @@ function renderAttractions() {
     routesGrid.innerHTML = '';
 }
 
-// Главная магия — используем MainButton (работает ВЕЗДЕ)
-window.selectRoute = function(id) {
-    const route = ROUTES.find(r => r.id === id);
-    tg.MainButton.text = `Открыть маршрут: ${route.name}`;
-    tg.MainButton.show();
-    tg.MainButton.onClick(function() {
-        tg.sendData(JSON.stringify({
-            action: "open_route",
-            route_id: id
-        }));
+// ←←←←← ВОТ ГЛАВНОЕ ИСПРАВЛЕНИЕ ДЛЯ MENU BUTTON
+function setupMainButton(text, data) {
+    tg.MainButton.offClick(); // чистим старый обработчик (это было причиной!)
+    tg.MainButton.setText(text);
+    tg.MainButton.onClick(() => {
+        tg.sendData(JSON.stringify(data));
         tg.close();
     });
+    tg.MainButton.show();
+}
+
+window.selectRoute = function(id) {
+    const route = ROUTES.find(r => r.id === id);
+    setupMainButton(`Пройти маршрут: ${route.name}`, { action: "open_route", route_id: id });
 };
 
 window.selectAttraction = function(id) {
     const attr = ATTRACTIONS.find(a => a.id === id);
-    tg.MainButton.text = `Открыть: ${attr.name}`;
-    tg.MainButton.show();
-    tg.MainButton.onClick(function() {
-        tg.sendData(JSON.stringify({
-            action: "open_attraction",
-            attraction_id: id
-        }));
-        tg.close();
-    });
+    setupMainButton(`Открыть: ${attr.name}`, { action: "open_attraction", attraction_id: id });
 };
 
-// Табы
+// Табы без изменений
 document.querySelectorAll('.tab').forEach(tab => {
     tab.onclick = () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
