@@ -13,9 +13,10 @@ function placeholderImage(id, type = 'route') {
     const [bg, mid, light] = palettes[type];
     const title = type === 'route' ? 'Маршрут' : 'Место';
 
-    return `data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='600' viewBox='0 0 800 600'><defs><linearGradient id='g' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='${mid}'/><stop offset='100%' stop-color='${bg}'/></defs><rect width='800' height='600' fill='url(%23g)'/><path d='M100 100 Q400 20 700 100 T700 500 Q400 580 100 500 Z' fill='rgba(255,255,255,0.1)'/><text x='400' y='290' font-family='Arial,sans-serif' font-size='64' fill='white' text-anchor='middle'>${title}</text><text x='400' y='380' font-family='Arial,sans-serif' font-size='48' fill='${light}' text-anchor='middle'>#${id}</text></svg>`;
+    return `data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='600' viewBox='0 0 800 600'><defs><linearGradient id='g' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='${mid}'/><stop offset='100%' stop-color='${bg}'/></linearGradient></defs><rect width='800' height='600' fill='url(%23g)'/><path d='M100 100 Q400 20 700 100 T700 500 Q400 580 100 500 Z' fill='rgba(255,255,255,0.1)'/><text x='400' y='290' font-family='Arial,sans-serif' font-size='64' fill='white' text-anchor='middle'>${title}</text><text x='400' y='380' font-family='Arial,sans-serif' font-size='48' fill='${light}' text-anchor='middle'>#${id}</text></svg>`;
 }
 
+// === РОУТЫ ===
 async function showRoutes() {
     routesGrid.innerHTML = '<div class="loader">Загрузка маршрутов...</div>';
     placesGrid.innerHTML = '';
@@ -42,6 +43,7 @@ async function showRoutes() {
     }
 }
 
+// === МЕСТА ===
 async function showAttractions() {
     placesGrid.innerHTML = '<div class="loader">Загрузка мест...</div>';
     routesGrid.innerHTML = '';
@@ -68,24 +70,30 @@ async function showAttractions() {
     }
 }
 
-window.selectRoute = (id) => {
-    const name = event.currentTarget.querySelector('.card-title').textContent;
+// КЛИКИ ПО КАРТОЧКАМ — ВОТ ГЛАВНОЕ ИСПРАВЛЕНИЕ
+window.selectRoute = function(id) {
+    const card = event.currentTarget;
+    const name = card.querySelector('.card-title').textContent;
     tg.MainButton.setText(`Пройти маршрут: ${name}`).show();
-    tg.MainButton.once('click', () => {
+    tg.MainButton.off('click'); // на всякий случай чистим старый обработчик
+    tg.MainButton.onClick(() => {
         tg.sendData(JSON.stringify({ action: "open_route", route_id: id }));
         tg.close();
     });
 };
 
-window.selectAttraction = (id => {
-    const name = event.currentTarget.querySelector('.card-title').textContent;
+window.selectAttraction = function(id) {
+    const card = event.currentTarget;
+    const name = card.querySelector('.card-title').textContent;
     tg.MainButton.setText(`Открыть: ${name}`).show();
-    tg.MainButton.once('click', () => {
+    tg.MainButton.off('click');
+    tg.MainButton.onClick(() => {
         tg.sendData(JSON.stringify({ action: "open_attraction", attraction_id: id }));
         tg.close();
     });
 };
 
+// ТАБЫ
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -99,4 +107,5 @@ document.querySelectorAll('.tab').forEach(tab => {
     });
 });
 
+// Старт
 showRoutes();
