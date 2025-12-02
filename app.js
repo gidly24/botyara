@@ -59,21 +59,26 @@ async function showAttractions() {
     }
 }
 
-// Выбор маршрута или места
 window.selectRoute = (id) => {
     const name = event.currentTarget.querySelector('.card-title').textContent;
-    tg.MainButton.setText(`Пройти: ${name}`).show();
+    tg.MainButton.setText(`Пройти маршрут: ${name}`).show();
     tg.MainButton.once('click', () => {
-        tg.sendData(JSON.stringify({type: "route", id}));
+        tg.sendData(JSON.stringify({
+            action: "open_route",
+            route_id: id
+        }));
         tg.close();
     });
 };
 
 window.selectAttraction = (id) => {
     const name = event.currentTarget.querySelector('.card-title').textContent;
-    tg.MainButton.setText(`Подробнее: ${name}`).show();
+    tg.MainButton.setText(`Открыть: ${name}`).show();
     tg.MainButton.once('click', () => {
-        tg.sendData(JSON.stringify({type: "attraction", id}));
+        tg.sendData(JSON.stringify({
+            action: "open_attraction",
+            attraction_id: id
+        }));
         tg.close();
     });
 };
