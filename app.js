@@ -1,28 +1,31 @@
 let tg = window.Telegram.WebApp;
 tg.expand();
+tg.ready(); // ← обязательно для Menu Button
 
-// Данные (пока статические — потом заменишь на fetch, если надо)
+const routesGrid = document.getElementById('routes-grid');
+const placesGrid = document.getElementById('places-grid');
+
+// Статические данные (потом можешь заменить на любые)
 const ROUTES = [
-    { id: 1, name: "Набережная Волги", description: "Лучший маршрут вдоль реки", duration: "2–3 часа", places_count: 8 },
-    { id: 2, name: "Космическая Самара", description: "Ракеты, музеи, космос", duration: "4 часа", places_count: 6 },
-    { id: 3, name: "Старый город", description: "Исторический центр и архитектура", duration: "3 часа", places_count: 10 }
+    { id: 1, name: "Набережная Волги", description: "Классика Самары за 2–3 часа", duration: "2–3 ч", places_count: 8 },
+    { id: 2, name: "Космическая Самара", description: "Ракеты, музеи, история космоса", duration: "4 ч", places_count: 6 },
+    { id: 3, name: "Старый город", description: "Доходные дома XIX века и атмосфера", duration: "3 ч", places_count: 10 },
 ];
 
 const ATTRACTIONS = [
-    { id: 1, name: "Бункер Сталина", description: "Секретный объект 37 метров под землёй", address: "ул. Фрунзе, 163", price: "600 ₽" },
-    { id: 2, name: "Ракета Союз", description: "Настоящая ракета во дворе музея", address: "пр. Ленина, 21", price: "300 ₽" },
-    { id: 3, name: "Самарская набережная", description: "Самое красивое место города", address: "Набережная Волги", price: "Бесплатно" }
+    { id: 1, name: "Бункер Сталина", description: "Секретный объект на глубине 37 м", address: "ул. Фрунзе, 163", price: "600 ₽" },
+    { id: 2, name: "Ракета «Союз»", description: "Настоящая ракета во дворе музея", address: "пр. Ленина, 21", price: "300 ₽" },
+    { id: 3, name: "Самарская набережная", description: "Лучшее место для прогулок", address: "Набережная Волги", price: "Бесплатно" },
 ];
 
-// Заглушка
+// Заглушки
 function placeholder(id, type) {
     const color = type === 'route' ? '#8B5CF6' : '#3B82F6';
-    return `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600"><rect width="800" height="600" fill="${color}"/><text x="400" y="320" font-size="80" fill="white" text-anchor="middle" font-family="sans-serif">${type === 'route' ? 'Маршрут' : 'Место'} #${id}</text></svg>`;
+    return `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect width="800" height="600" fill="${color}"/><text x="400" y="320" font-size="72" fill="white" text-anchor="middle" font-family="sans-serif">${type === 'route' ? 'Маршрут' : 'Место'} #${id}</text></svg>`;
 }
 
-// === РЕНДЕР ===
 function renderRoutes() {
-    document.getElementById('routes-grid').innerHTML = ROUTES.map(r => `
+    routesGrid.innerHTML = ROUTES.map(r => `
         <div class="card" onclick="selectRoute(${r.id})">
             <img src="${placeholder(r.id, 'route')}" alt="${r.name}">
             <div class="card-content">
@@ -35,11 +38,11 @@ function renderRoutes() {
             </div>
         </div>
     `).join('');
-    document.getElementById('places-grid').innerHTML = '';
+    placesGrid.innerHTML = '';
 }
 
 function renderAttractions() {
-    document.getElementById('places-grid').innerHTML = ATTRACTIONS.map(a => `
+    placesGrid.innerHTML = ATTRACTIONS.map(a => `
         <div class="card" onclick="selectAttraction(${a.id})">
             <img src="${placeholder(a.id, 'place')}" alt="${a.name}">
             <div class="card-content">
@@ -52,31 +55,37 @@ function renderAttractions() {
             </div>
         </div>
     `).join('');
-    document.getElementById('routes-grid').innerHTML = '';
+    routesGrid.innerHTML = '';
 }
 
-// === ОТПРАВКА В БОТ ===
+// Главная магия — используем MainButton (работает ВЕЗДЕ)
 window.selectRoute = function(id) {
     const route = ROUTES.find(r => r.id === id);
-    tg.sendData(JSON.stringify({
-        action: "open_route",
-        route_id: id,
-        name: route.name
-    }));
-    tg.close();
+    tg.MainButton.text = `Открыть маршрут: ${route.name}`;
+    tg.MainButton.show();
+    tg.MainButton.onClick(function() {
+        tg.sendData(JSON.stringify({
+            action: "open_route",
+            route_id: id
+        }));
+        tg.close();
+    });
 };
 
 window.selectAttraction = function(id) {
     const attr = ATTRACTIONS.find(a => a.id === id);
-    tg.sendData(JSON.stringify({
-        action: "open_attraction",
-        attraction_id: id,
-        name: attr.name
-    }));
-    tg.close();
+    tg.MainButton.text = `Открыть: ${attr.name}`;
+    tg.MainButton.show();
+    tg.MainButton.onClick(function() {
+        tg.sendData(JSON.stringify({
+            action: "open_attraction",
+            attraction_id: id
+        }));
+        tg.close();
+    });
 };
 
-// === ТАБЫ ===
+// Табы
 document.querySelectorAll('.tab').forEach(tab => {
     tab.onclick = () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -84,13 +93,9 @@ document.querySelectorAll('.tab').forEach(tab => {
         tab.classList.add('active');
         document.getElementById(tab.dataset.tab).classList.add('active');
 
-        if (tab.dataset.tab === 'routes') {
-            renderRoutes();
-        } else {
-            renderAttractions();
-        }
+        if (tab.dataset.tab === 'routes') renderRoutes();
+        else renderAttractions();
     };
 });
 
-// Старт
 renderRoutes();
