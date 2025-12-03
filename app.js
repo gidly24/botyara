@@ -8,7 +8,7 @@ const placesGrid = document.getElementById('places-grid');
 const ROUTES = [
     { id: 1, name: "Набережная Волги", description: "Классика Самары за 2–3 часа", duration: "2–3 ч", places_count: 8 },
     { id: 2, name: "Космическая Самара", description: "Ракеты, музеи, история космоса", duration: "4 ч", places_count: 6 },
-    { id: 3, name: "Старый город", description: "Доходные дома XIX века и атмосфера", duration: "3 ч", places_count: 10 },
+    { id: 3, name: "Архитектурный модерн", description: "Доходные дома XIX века и атмосфера", duration: "3 ч", places_count: 10 },
 ];
 
 const ATTRACTIONS = [
