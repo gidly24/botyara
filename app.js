@@ -75,13 +75,27 @@ function setupMainButton(text, data) {
 }
 
 window.selectRoute = function(id) {
-    const route = ROUTES.find(r => r.id === id);
-    setupMainButton(`Пройти маршрут: ${route.name}`, { action: "open_route", route_id: id });
+    const name = event.currentTarget.querySelector('h3').textContent;
+    tg.MainButton.setText(`Пройти: ${name}`).show();
+    tg.MainButton.once('click', () => {
+        tg.sendData(JSON.stringify({
+            action: "open_route",
+            route_id: id
+        }));
+        tg.close();
+    });
 };
 
 window.selectAttraction = function(id) {
-    const attr = ATTRACTIONS.find(a => a.id === id);
-    setupMainButton(`Открыть: ${attr.name}`, { action: "open_attraction", attraction_id: id });
+    const name = event.currentTarget.querySelector('h3').textContent;
+    tg.MainButton.setText(`Подробнее: ${name}`).show();
+    tg.MainButton.once('click', () => {
+        tg.sendData(JSON.stringify({
+            action: "open_attraction",
+            attraction_id: id
+        }));
+        tg.close();
+    });
 };
 
 // Табы без изменений
@@ -98,3 +112,4 @@ document.querySelectorAll('.tab').forEach(tab => {
 });
 
 renderRoutes();
+
