@@ -75,9 +75,16 @@ function setupMainButton(text, data) {
 }
 
 window.selectRoute = function(id) {
-    const name = event.currentTarget.querySelector('h3').textContent;
-    tg.MainButton.setText(`Пройти: ${name}`).show();
-    tg.MainButton.once('click', () => {
+    const route = ROUTES.find(r => r.id === id);
+    if (!route) return;
+
+    // Показываем кнопку СРАЗУ
+    tg.MainButton.setText(`Пройти маршрут: ${route.name}`);
+    tg.MainButton.show();
+
+    // Очищаем старый обработчик и вешаем новый
+    tg.MainButton.offClick();
+    tg.MainButton.onClick(() => {
         tg.sendData(JSON.stringify({
             action: "open_route",
             route_id: id
@@ -87,9 +94,16 @@ window.selectRoute = function(id) {
 };
 
 window.selectAttraction = function(id) {
-    const name = event.currentTarget.querySelector('h3').textContent;
-    tg.MainButton.setText(`Подробнее: ${name}`).show();
-    tg.MainButton.once('click', () => {
+    const attraction = ATTRACTIONS.find(a => a.id === id);
+    if (!attraction) return;
+
+    // Показываем кнопку СРАЗУ
+    tg.MainButton.setText(`Подробнее: ${attraction.name}`);
+    tg.MainButton.show();
+
+    // Очищаем старый обработчик
+    tg.MainButton.offClick();
+    tg.MainButton.onClick(() => {
         tg.sendData(JSON.stringify({
             action: "open_attraction",
             attraction_id: id
@@ -110,6 +124,5 @@ document.querySelectorAll('.tab').forEach(tab => {
         else renderAttractions();
     };
 });
-
 renderRoutes();
 
